@@ -13,12 +13,6 @@ module.exports = function sendImg(res, imgPath, imgType, dirPath) {
     readStream.pipe(res);
   });
   readStream.on("error", function() {
-    const errors = {};
-    if (!fs.existsSync(dirPath)) {
-      errors.dirError = "The requested directory wasn't found.";
-    } else if (fs.existsSync(dirPath) && !fs.existsSync(imgPath)) {
-      errors.imgError = "The requested image wasn't found.";
-    }
-    res.status(404).json(errors);
+    res.status(500).json({ error: "The requested file could not be found" });
   });
 };
