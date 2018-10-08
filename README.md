@@ -2,6 +2,8 @@
 
 ## Overview:
 
+## include node version number
+
 This **Image Resize Service** (implemented with Node.js) that sends images stored in the service. Two endpoints are provided to deliver 1) original/raw images or 2) requested a copy of the raw
 
 ### Dependencies

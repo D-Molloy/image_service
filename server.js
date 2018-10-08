@@ -4,6 +4,9 @@ const fs = require("fs");
 const sharp = require("sharp");
 const sendImg = require("./sendImg");
 
+// validation modules
+const validateRouteParams = require("./validateRouteParams");
+const isEmpty = require("./isEmpty");
 const app = express();
 
 // setup morgan
@@ -14,33 +17,23 @@ const PORT = 4000;
 // @desc    Send raw image file
 // @access  Public
 app.get("/api/images/raw/:imgDir/:imgName", (req, res) => {
-  // TODO - toLowercase path and name
-
   const { imgDir, imgName } = req.params;
-  const imgType = imgName.split(".")[1].toLowerCase();
-  const dirPath = `./images/${imgDir}/`;
-  const imgPath = `./images/${imgDir}/raw/${imgName}`;
 
+  let validationResults = validateRouteParams(imgDir, imgName, null);
+  console.log(validationResults);
+  if (!validationResults.isValid) {
+    const error = {
+      error:
+        "There is an issue with the imageDirectory or rawImageName you are requesting.  Please check the documentation and try again.",
+      requestedUrl: `http://localhost:4000/api/images/raw/${imgDir}/${imgName}`,
+      documentation:
+        "https://github.com/D-Molloy/image_service/blob/master/README.md"
+    };
+    return res.status(404).json(error);
+  }
+
+  let { imgPath, imgType, dirPath } = validationResults.routeParams;
   sendImg(res, imgPath, imgType, dirPath);
-  // works -  with error checking
-  // const readStream = fs.createReadStream(imgPath);
-  // readStream.on("open", function() {
-  //   // Set the content-type of the response
-  //   res.type(`${imgType}`);
-  //   // Send the image
-  //   readStream.pipe(res);
-  // });
-  // readStream.on("error", function() {
-  //   const errors = {};
-  //   if (!fs.existsSync(dirPath)) {
-  //     errors.directory = "The requested directory wasn't found.";
-  //   } else if (fs.existsSync(dirPath) && !fs.existsSync(imgPath)) {
-  //     errors.image = "The requested image wasn't found.";
-  //   }
-  //   // do id need to set the content type if just sending json
-  //   // res.set("Content-Type", "application/json");
-  //   res.status(404).json(errors);
-  // });
 });
 
 // @route   GET api/images/resize/:imgDir/:imgDimName
@@ -48,38 +41,30 @@ app.get("/api/images/raw/:imgDir/:imgName", (req, res) => {
 // @access  Public
 app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
   // imgDimName - 800x600+IMG_0001.jpg
-  const { imgDir } = req.params;
-  const [imgDims, imgName] = [
-    req.params.imgDimName.split("+")[0],
-    req.params.imgDimName.split("+")[1]
-  ];
-  const imgType = imgName.split(".")[1].toLowerCase();
-  const [imgWidth, imgHeight] = [
-    parseInt(imgDims.split("x")[0]),
-    parseInt(imgDims.split("x")[1])
-  ];
+  const { imgDir, imgDimName } = req.params;
+  let validationResults = validateRouteParams(imgDir, null, imgDimName);
+  console.log(validationResults);
+  if (!validationResults.isValid) {
+    const error = {
+      error:
+        "There is an issue with the imageDirectory you are requesting or the format of the resizedImageName you are requesting.  Please check the documentation and try again.",
+      requestedUrl: `http://localhost:4000/api/images/resize/${imgDir}/${imgDimName}`,
+      documentation:
+        "https://github.com/D-Molloy/image_service/blob/master/README.md"
+    };
+    return res.status(404).json(error);
+  }
 
-  //TODO - send an error if dimensions aren't included
+  let {
+    imgResizePath,
+    subDirPath,
+    imgType,
+    createSubDir
+  } = validationResults.routeParams;
+  // //check to see if the subDir exists, if not, create it
 
-  const dirPath = `./images/${imgDir}/`;
-  const subDirPath = `./images/${imgDir}/${imgDims}`;
-  const imgRawPath = `./images/${imgDir}/raw/${imgName}`;
-  const imgResizePath = `./images/${imgDir}/${imgDims}/${imgName}`;
-
-  // console.log(`imgDir - ${imgDir}
-  // imgDims - ${imgDims}
-  // imgName - ${imgName}
-  // imgWidth - ${typeof imgWidth}
-  // imgHeight - ${imgHeight}`);
-
-  //TODO - check to make sure dirPath exists
-  if (!fs.existsSync(dirPath))
-    return res
-      .status(404)
-      .json({ msg: "The requested image directory doesn't exist" });
-
-  //check to see if the subDir exists, if not, create it
-  if (!fs.existsSync(subDirPath)) {
+  if (createSubDir) {
+    let { imgRawPath, imgHeight, imgWidth } = validationResults.routeParams;
     console.log("SubDir Created. Creating and sending the requested image.");
     // create the image resolution-specific directory
     fs.mkdirSync(subDirPath);
@@ -92,23 +77,23 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
         // sendImg(imgResizePath).pipe(res);
       });
   } else {
-    //the requested dimensions subDir exists, so send the existing file
+    //   //the requested dimensions subDir exists, so send the existing file
     console.log("SubDir exists. Sending the requested image.");
     sendImg(res, imgResizePath, imgType, subDirPath);
-    // const readStream = fs.createReadStream(imgResizePath);
-    // readStream.on("open", function() {
-    //   // Set the content-type of the response
-    //   res.type(`${imgType}`);
-    //   // Send the image
-    //   readStream.pipe(res);
-    // });
-    // readStream.on("error", function(err) {
-    //   // do id need to set the content type if just sending json
-    //   // res.set("Content-Type", "application/json");
-    //   res
-    //     .status(404)
-    //     .json({ msg: "The requested file could not be found.", err });
-    // });
+    //   // const readStream = fs.createReadStream(imgResizePath);
+    //   // readStream.on("open", function() {
+    //   //   // Set the content-type of the response
+    //   //   res.type(`${imgType}`);
+    //   //   // Send the image
+    //   //   readStream.pipe(res);
+    //   // });
+    //   // readStream.on("error", function(err) {
+    //   //   // do id need to set the content type if just sending json
+    //   //   // res.set("Content-Type", "application/json");
+    //   //   res
+    //   //     .status(404)
+    //   //     .json({ msg: "The requested file could not be found.", err });
+    //   // });
   }
 
   // TO-DO - catch an error and send a message that error occurred while processing image
