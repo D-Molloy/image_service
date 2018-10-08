@@ -77,6 +77,7 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
     return res
       .status(404)
       .json({ msg: "The requested image directory doesn't exist" });
+
   //check to see if the subDir exists, if not, create it
   if (!fs.existsSync(subDirPath)) {
     console.log("SubDir Created. Creating and sending the requested image.");
@@ -87,7 +88,6 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
       .resize(imgWidth, imgHeight)
       .toFile(imgResizePath)
       .then(() => {
-        res.type(`${imgType}`);
         sendImg(res, imgResizePath, imgType, subDirPath);
         // sendImg(imgResizePath).pipe(res);
       });
@@ -110,7 +110,6 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
     //     .json({ msg: "The requested file could not be found.", err });
     // });
   }
-  //check to see if subdir exists - if it does, send the existing file
 
   // TO-DO - catch an error and send a message that error occurred while processing image
 });

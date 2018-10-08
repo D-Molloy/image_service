@@ -48,3 +48,17 @@ This **Image Resize Service** (implemented with Node.js) that sends images store
 
 - **Example request**:
   `http://localhost:4000/api/images/raw/kendall-katwalk/IMG_0001.jpg`
+
+## File Reference
+
+### Stored Images
+
+| [imageDirectory]  | [rawImageName] |
+| ----------------- | -------------- |
+| goat-lake         | IMG_0001.jpg   |
+| kendall-katwalk   | IMG_0001.jpg   |
+| lake-colchuck     | IMG_0024.png   |
+| rattlesnake-ridge | IMG_0024.png   |
+| tulip-festival    | tulips.gif     |
+
+### sendImg.js
