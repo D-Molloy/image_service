@@ -4,7 +4,7 @@ const fs = require("fs");
 const sharp = require("sharp");
 const sendImg = require("./sendImg");
 
-// validation modules
+// validation module
 const validateRouteParams = require("./validateRouteParams");
 
 const app = express();
