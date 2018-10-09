@@ -2,7 +2,7 @@
 
 ## Overview:
 
-This **Image Resize Service** (implemented with Node.js v10.9.0) that sends images stored in the service. Two endpoints are provided to deliver 1) original/raw images or 2) deliver a resized version of the raw image with custom dimensions
+This **Image Resize Service** (implemented with Node.js v10.9.0) sends raw and custom-resized images. Two endpoints are provided to deliver 1) original/raw images or 2) a resized version of the raw image with custom dimensions.
 
 ### Dependencies
 
