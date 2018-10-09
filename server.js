@@ -6,7 +6,7 @@ const sendImg = require("./sendImg");
 
 // validation modules
 const validateRouteParams = require("./validateRouteParams");
-const isEmpty = require("./isEmpty");
+// const isEmpty = require("./isEmpty");
 const app = express();
 
 // setup morgan
@@ -18,37 +18,37 @@ const PORT = 4000;
 // @access  Public
 app.get("/api/images/raw/:imgDir/:imgName", (req, res) => {
   const { imgDir, imgName } = req.params;
-
+  // validate the route params
   let validationResults = validateRouteParams(imgDir, imgName, null);
-  console.log(validationResults);
+  //if the params weren't valid, send an error
   if (!validationResults.isValid) {
     const error = {
       error:
-        "There is an issue with the imageDirectory or rawImageName you are requesting.  Please check the documentation and try again.",
-      requestedUrl: `http://localhost:4000/api/images/raw/${imgDir}/${imgName}`,
+        "There is an issue with the imageDirectory and/or rawImageName parameters you are requesting.  Please check the documentation and try again.",
+      requestedParams: `imageDirectory: ${imgDir} - rawImageName: ${imgName}`,
       documentation:
         "https://github.com/D-Molloy/image_service/blob/master/README.md"
     };
     return res.status(404).json(error);
   }
-
-  let { imgPath, imgType, dirPath } = validationResults.routeParams;
-  sendImg(res, imgPath, imgType, dirPath);
+  //if validation is passed, send the image
+  let { imgPath, imgType } = validationResults.routeParams;
+  sendImg(res, imgPath, imgType);
 });
 
 // @route   GET api/images/resize/:imgDir/:imgDimName
 // @desc    Send a resized image based on the dimensions included in imgDimName
 // @access  Public
 app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
-  // imgDimName - 800x600+IMG_0001.jpg
   const { imgDir, imgDimName } = req.params;
+  // validate the request params
   let validationResults = validateRouteParams(imgDir, null, imgDimName);
-  console.log(validationResults);
+  // if params don't pass validation, send an error
   if (!validationResults.isValid) {
     const error = {
       error:
         "There is an issue with the imageDirectory you are requesting or the format of the resizedImageName you are requesting.  Please check the documentation and try again.",
-      requestedUrl: `http://localhost:4000/api/images/resize/${imgDir}/${imgDimName}`,
+      requestedParams: `imageDirectory: ${imgDir} - resizedImageName: "${imgDimName}"`,
       documentation:
         "https://github.com/D-Molloy/image_service/blob/master/README.md"
     };
@@ -61,11 +61,11 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
     imgType,
     createSubDir
   } = validationResults.routeParams;
-  // //check to see if the subDir exists, if not, create it
 
+  // if the requested image size doesn't exist, create the subdirectory and save the resized image
   if (createSubDir) {
     let { imgRawPath, imgHeight, imgWidth } = validationResults.routeParams;
-    console.log("SubDir Created. Creating and sending the requested image.");
+
     // create the image resolution-specific directory
     fs.mkdirSync(subDirPath);
     //use the Sharp module to resize and save the image, then send it back
@@ -73,41 +73,31 @@ app.get("/api/images/resize/:imgDir/:imgDimName", (req, res) => {
       .resize(imgWidth, imgHeight)
       .toFile(imgResizePath)
       .then(() => {
-        sendImg(res, imgResizePath, imgType, subDirPath);
-        // sendImg(imgResizePath).pipe(res);
+        sendImg(res, imgResizePath, imgType);
       });
   } else {
-    //   //the requested dimensions subDir exists, so send the existing file
-    console.log("SubDir exists. Sending the requested image.");
-    sendImg(res, imgResizePath, imgType, subDirPath);
-    //   // const readStream = fs.createReadStream(imgResizePath);
-    //   // readStream.on("open", function() {
-    //   //   // Set the content-type of the response
-    //   //   res.type(`${imgType}`);
-    //   //   // Send the image
-    //   //   readStream.pipe(res);
-    //   // });
-    //   // readStream.on("error", function(err) {
-    //   //   // do id need to set the content type if just sending json
-    //   //   // res.set("Content-Type", "application/json");
-    //   //   res
-    //   //     .status(404)
-    //   //     .json({ msg: "The requested file could not be found.", err });
-    //   // });
+    // if the requested resize dimensions already exist, send the existing image
+    sendImg(res, imgResizePath, imgType);
   }
-
-  // TO-DO - catch an error and send a message that error occurred while processing image
 });
 
-// Code catch all route.  Send an obj with example routes for raw and resized
+// @route   GET - Catch All
+// @desc    Catches any routes that don't match the Raw and Resize routes above
+// @access  Public
+app.get("*", (req, res) => {
+  const message = {
+    msg:
+      "Thanks for using Image Resize Service. Please use one of the following endpoints to get a RAW or RESIZED image.  View the documentation for more details.",
+    RAW: "http://localhost:4000/api/images/raw/[imageDirectory]/[rawImageName]",
+    RESIZED:
+      "http://localhost:4000/api/images/resize/[imageDirectory]/[resizedImageName]",
+    documentation:
+      "https://github.com/D-Molloy/image_service/blob/master/README.md"
+  };
+
+  res.json(message);
+});
 
 app.listen(PORT, () => {
   console.log(`Service listening on PORT: ${PORT}`);
 });
-
-// SHARP - https://malcoded.com/posts/nodejs-image-resize-express-sharp
-
-// check if directory exists, if not make it - https://blog.raananweber.com/2015/12/15/check-if-a-directory-exists-in-node-js/
-
-// https://stackoverflow.com/questions/4482686/check-synchronously-if-file-directory-exists-in-node-js
-// https://stackoverflow.com/questions/5823722/how-to-serve-an-image-using-nodejs

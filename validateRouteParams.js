@@ -1,3 +1,4 @@
+// validateRouteParams.js is used to validate parameters entered for raw and resize requests
 const fs = require("fs");
 const isEmpty = require("./isEmpty");
 
@@ -28,19 +29,24 @@ const parseResizeImageName = filename => {
     imageParams.isValid = false;
   } else {
     // parse the file name into dimensions and filename
-    const [imgDims, imgName] = [filename.split("+")[0], filename.split("+")[1]];
+    const [imgDims, imgName] = [
+      filename.split("+")[0],
+      filename.split("+")[1].toLowerCase()
+    ];
     const [imgWidth, imgHeight] = [
       parseInt(imgDims.split("x")[0]),
       parseInt(imgDims.split("x")[1])
     ];
 
-    imgWidth
+    // ensure height and with are numbers greater than 0, if not, set invalid flag
+    imgWidth && imgWidth > 0
       ? (imageParams.imgWidth = imgWidth)
       : (imageParams.isValid = false);
-    imgHeight
+    imgHeight && imgHeight > 0
       ? (imageParams.imgHeight = imgHeight)
       : (imageParams.isValid = false);
 
+    //ensure the file name is valid, if not, set invalid flag
     validateImageFileName(imgName)
       ? (imageParams.imgName = imgName)
       : (imageParams.isValid = false);
@@ -50,12 +56,9 @@ const parseResizeImageName = filename => {
   return imageParams;
 };
 
+// parse and validate the resizeImgName parameter for use when creating a resized image
 const validateRouteParams = (imgDir, rawImgName, resizeImgName) => {
   let routeParams = {};
-  console.log(imgDir);
-  console.log(rawImgName);
-  console.log(checkDir(`/images/${imgDir}/`));
-  console.log(checkDir(`/images/${imgDir}/raw/${rawImgName}`));
 
   //check raw route params - make sure imgDir and rawImgName exists and the provided file name is valid
   if (
@@ -64,31 +67,42 @@ const validateRouteParams = (imgDir, rawImgName, resizeImgName) => {
     validateImageFileName(rawImgName) &&
     !resizeImgName
   ) {
+    // set routeParams for retrieving the requested file
     routeParams.imgType = rawImgName.split(".")[1];
     routeParams.dirPath = `./images/${imgDir}/`;
-    routeParams.imgPath = `./images/${imgDir}/raw/${rawImgName}`;
+    routeParams.imgPath = `./images/${imgDir}/raw/${rawImgName.toLowerCase()}`;
   }
 
   //check resized route params
-
-  if (checkDir(`/images/${imgDir}/`) && resizeImgName && !rawImgName) {
+  if (checkDir(`/images/${imgDir}/`) && resizeImgName) {
     let parseResults = parseResizeImageName(resizeImgName);
-    if (parseResults) {
-      routeParams = parseResults;
-      routeParams.imgType = parseResults.imgName.split(".")[1];
-
-      routeParams.dirPath = `./images/${imgDir}/`;
-      routeParams.subDirPath = `./images/${imgDir}/${parseResults.imgDims}/`;
-      routeParams.imgRawPath = `./images/${imgDir}/raw/${
-        parseResults.imgName
-      }/`;
-      routeParams.imgResizePath = `./images/${imgDir}/${parseResults.imgDims}/${
-        parseResults.imgName
-      }/`;
-      checkDir(`/images/${imgDir}/${parseResults.imgDims}/`)
-        ? (routeParams.createSubDir = false)
-        : (routeParams.createSubDir = true);
+    // ensure the raw file needed for the resize exists
+    if (
+      !fs.existsSync(
+        __dirname + `/images/${imgDir}/raw/${parseResults.imgName}`
+      )
+    ) {
+      return { isValid: false };
     }
+
+    //ensure the resizeImgName is valid
+    if (parseResults.isValid === false) {
+      return { isValid: false };
+    }
+    // if validation passes, set routeParams for creating and retrieving the requested file
+    routeParams = parseResults;
+    routeParams.imgType = parseResults.imgName.split(".")[1];
+
+    routeParams.dirPath = `./images/${imgDir}/`;
+    routeParams.subDirPath = `./images/${imgDir}/${parseResults.imgDims}/`;
+    routeParams.imgRawPath = `./images/${imgDir}/raw/${parseResults.imgName}`;
+    routeParams.imgResizePath = `./images/${imgDir}/${parseResults.imgDims}/${
+      parseResults.imgName
+    }`;
+    //set flag for whether the custom resize directory needs to be created
+    checkDir(`/images/${imgDir}/${parseResults.imgDims}/`)
+      ? (routeParams.createSubDir = false)
+      : (routeParams.createSubDir = true);
   }
 
   return {
@@ -98,14 +112,3 @@ const validateRouteParams = (imgDir, rawImgName, resizeImgName) => {
 };
 
 module.exports = validateRouteParams;
-
-// [imageDirectory]	[rawImageName]
-// goat-lake	IMG_0001.jpg
-// kendall-katwalk	IMG_0001.jpg
-// lake-colchuck	IMG_0024.png
-// rattlesnake-ridge	IMG_0024.png
-// tulip-festival	tulips.gif
-// validateRouteParams("aaa", ".jpg");
-
-// console.log(validateImageFileName("_a.jpg"));
-// console.log(checkDir(`/images/goat-lake/raw/IMG_000.jpg`));

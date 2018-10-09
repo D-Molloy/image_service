@@ -4,7 +4,7 @@
 
 ## include node version number
 
-This **Image Resize Service** (implemented with Node.js) that sends images stored in the service. Two endpoints are provided to deliver 1) original/raw images or 2) requested a copy of the raw
+This **Image Resize Service** (implemented with Node.js v10.9.0) that sends images stored in the service. Two endpoints are provided to deliver 1) original/raw images or 2) deliver a resized version of the raw image with custom dimensions
 
 ### Dependencies
 
@@ -14,11 +14,11 @@ This **Image Resize Service** (implemented with Node.js) that sends images store
 
 ### Supported Image Formats
 
-- JPG, PNG, GIF
+- jpg, png, gif
 
 ## Installation
 
-> git clone [UPDATE WITH FINAL REPO]
+> git clone https://github.com/D-Molloy/image_service.git
 
 > cd image_service
 
@@ -37,7 +37,7 @@ This **Image Resize Service** (implemented with Node.js) that sends images store
    - **Example request**:
      `http://localhost:4000/api/images/raw/kendall-katwalk/IMG_0001.jpg`
 
-2. For getting custom **resized** image:
+2. For getting a custom **resized** image:
 
    `http://localhost:4000/api/images/resize/[imageDirectory]/[resizedImageName]`
 
@@ -46,14 +46,14 @@ This **Image Resize Service** (implemented with Node.js) that sends images store
 
    - Note on `[resizedImageName]`: Per the instructions, `[resizedImageName]` is some composition of `[rawImageName]` + `[resizeOption]`. For my implementation, `[resizeOption]` is **required** to be numbers representing 'width x height' followed `[rawImageName]`. An example of a valid `[resizedImageName]` is **800x600+IMG_0001.jpg** which would result in an 800x600 copy of IMG_0001.jpg raw image.
 
-   - An potential alternative endpoint would to separate the requested dimensions into it's own request parameter
+   - Requested dimensions must be greater than 0.
+
+   - A potential alternative endpoint would to separate the requested dimensions into it's own request parameter
 
 - **Example request**:
-  `http://localhost:4000/api/images/raw/kendall-katwalk/IMG_0001.jpg`
+  `http://localhost:4000/api/images/resize/kendall-katwalk/1024x768+IMG_0001.jpg`
 
-## File Reference
-
-### Stored Images
+### Stored Image Reference
 
 | [imageDirectory]  | [rawImageName] |
 | ----------------- | -------------- |
@@ -62,5 +62,3 @@ This **Image Resize Service** (implemented with Node.js) that sends images store
 | lake-colchuck     | IMG_0024.png   |
 | rattlesnake-ridge | IMG_0024.png   |
 | tulip-festival    | tulips.gif     |
-
-### sendImg.js

@@ -1,18 +1,19 @@
+// sendImg is used to send the file from the file system
 const fs = require("fs");
 
-// module.exports = function sendImg(path, format, width, height) {
-//   const readStream = fs.createReadStream(path);
-//   return readStream;
-// };
-module.exports = function sendImg(res, imgPath, imgType, dirPath) {
+module.exports = function sendImg(res, imgPath, imgType) {
+  //create a stream for sending the file
   const readStream = fs.createReadStream(imgPath);
+  // if it exists, send it
   readStream.on("open", function() {
-    // Set the content-type of the response based on the image filetype
     res.type(`${imgType}`);
-    // Send the image
     readStream.pipe(res);
   });
+  // if and error occurs, inform the user
   readStream.on("error", function() {
-    res.status(500).json({ error: "The requested file could not be found" });
+    res.status(500).json({
+      error:
+        "The requested file could not be found.  Please ensure the correct file extension was used."
+    });
   });
 };
