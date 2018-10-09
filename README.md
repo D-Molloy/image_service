@@ -18,7 +18,7 @@ This **Image Resize Service** (implemented with Node.js v10.9.0) that sends imag
 
 ## Installation
 
-> git clone https://github.com/D-Molloy/image_service.git
+> git clone `https://github.com/D-Molloy/image_service.git`
 
 > cd image_service
 
