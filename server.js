@@ -6,7 +6,7 @@ const sendImg = require("./sendImg");
 
 // validation modules
 const validateRouteParams = require("./validateRouteParams");
-// const isEmpty = require("./isEmpty");
+
 const app = express();
 
 // setup morgan
