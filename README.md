@@ -46,7 +46,7 @@ This **Image Resize Service** (implemented with Node.js v10.9.0) sends raw and c
 
    - Requested dimensions must be greater than 0.
 
-   - A potential alternative endpoint would to separate the requested dimensions into it's own request parameter
+   - A potential alternative endpoint would be to separate the requested dimensions into it's own request parameter
 
 - **Example request**:
   `http://localhost:4000/api/images/resize/kendall-katwalk/1024x768+IMG_0001.jpg`
